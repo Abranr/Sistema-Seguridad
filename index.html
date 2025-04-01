@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Tailwind Dark Mode Configuration
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js/dist/face-api.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        #video-container {
+            display: none;
+            position: relative;
+        }
+        #canvas-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 flex items-center justify-center min-h-screen transition-colors duration-300">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-8 w-full max-w-md relative overflow-hidden">
+        <!-- Theme Toggle Button -->
+        <button 
+            id="theme-toggle-btn"
+            class="absolute top-4 right-4 z-50 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition"
+        >
+            <i id="theme-toggle-icon" class="fas fa-moon text-2xl"></i>
+        </button>
+
+        <!-- Login Section -->
+        <div id="login-section">
+            <div class="text-center mb-8">
+                <i class="fas fa-building text-4xl text-blue-600 mb-2"></i>
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">SEGURIDAD GLOBAL S.A</h2>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">Inicia sesión en tu cuenta</p>
+            </div>
+
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="text-gray-600 dark:text-gray-400 block mb-2">
+                        <i class="fas fa-user mr-2"></i>Usuario
+                    </label>
+                    <input 
+                        type="text" 
+                        id="username-login"
+                        placeholder="Ingresa tu usuario" 
+                        class="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white py-3 px-4 rounded-lg border border-transparent focus:border-blue-500 focus:outline-none"
+                        required
+                    >
+                </div>
+
+                <div>
+                    <label class="text-gray-600 dark:text-gray-400 block mb-2">
+                        <i class="fas fa-lock mr-2"></i>Contraseña
+                    </label>
+                    <input 
+                        type="password" 
+                        id="password-login"
+                        placeholder="Ingresa tu contraseña" 
+                        class="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white py-3 px-4 rounded-lg border border-transparent focus:border-blue-500 focus:outline-none"
+                        required
+                    >
+                </div>
+
+                <div class="flex justify-between items-center">
+                    <label class="flex items-center text-gray-600 dark:text-gray-400">
+                        <input type="checkbox" class="mr-2 dark:bg-gray-700 dark:border-gray-600" />
+                        Recordar usuario
+                    </label>
+                    <a href="#" class="text-blue-600 dark:text-blue-400 text-sm hover:underline">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+                </div>
+
+                <div class="space-y-3">
+                    <button 
+                        type="submit" 
+                        class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
+                    >
+                        Iniciar Sesión
+                    </button>
+
+                    <button 
+                        type="button" 
+                        id="btn-facial-login"
+                        class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition font-semibold flex items-center justify-center"
+                    >
+                        <i class="fas fa-face-id mr-2"></i>Reconocimiento Facial
+                    </button>
+                </div>
+            </form>
+
+            <div class="text-center mt-4">
+                <span class="text-gray-600 dark:text-gray-400">¿No tienes cuenta? </span>
+                <a href="#" id="btn-registro" class="text-blue-600 dark:text-blue-400 hover:underline">
+                    Regístrate aquí
+                </a>
+            </div>
+        </div>
+
+        <!-- Facial Recognition Section -->
+        <div id="facial-recognition-section" class="hidden">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Reconocimiento Facial</h2>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">Coloca tu rostro dentro del recuadro</p>
+            </div>
+            
+            <div id="video-container" class="relative mb-4 mx-auto" style="width:350px; height:250px;">
+                <video id="video" width="350" height="250" autoplay muted class="absolute top-0 left-0"></video>
+                <canvas id="canvas-overlay" width="350" height="250" class="absolute top-0 left-0"></canvas>
+                <div id="face-guide" class="absolute top-0 left-0 w-full h-full border-4 border-transparent"></div>
+            </div>
+            
+            <div class="flex space-x-4">
+                <button 
+                    id="btn-iniciar-facial" 
+                    class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition"
+                >
+                    <i class="fas fa-camera mr-2"></i>Tomar Foto
+                </button>
+                <button 
+                    id="btn-cancelar-facial" 
+                    class="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition"
+                >
+                    <i class="fas fa-times mr-2"></i>Cancelar
+                </button>
+            </div>
+        </div>
+
+        <!-- Registro Section -->
+        <div id="registro-section" class="hidden">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">REGISTRO EN SEGURIDAD GLOBAL S.A</h2>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">Crea tu cuenta</p>
+            </div>
+
+            <form id="registro-form" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-gray-600 dark:text-gray-400 block mb-2">
+                            <i class="fas fa-user mr-2"></i>Nombre
+                        </label>
+                        <input 
+                            type="text" 
+                            id="nombre-registro"
+                            placeholder="Tu nombre" 
+                            class="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white py-3 px-4 rounded-lg border border-transparent focus:border-blue-500 focus:outline-none"
+                            required
+                        >
+                    </div>
+                    <div>
+                        <label class="text-gray-600 dark:text-gray-400 block mb-2">
+                            <i class="fas fa-user-friends mr-2"></i>Apellido
+                        </label>
+                        <input 
+                            type="text" 
+                            id="apellido-registro"
+                            placeholder="Tu apellido" 
+                            class="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white py-3 px-4 rounded-lg border border-transparent focus:border-blue-500 focus:outline-none"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-gray-600 dark:text-gray-400 block mb-2">
+                        <i class="fas fa-id-card mr-2"></i>DPI/NIT
+                    </label>
+                    <input 
+                        type="text" 
+                        id="dpi-registro"
+                        placeholder="Número de identificación" 
+                        class="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white py-3 px-4 rounded-lg border border-transparent focus:border-blue-500 focus:outline-none"
+                        required
+                    >
+                </div>
+
+                <div>
+                    <label class="text-gray-600 dark:text-gray-400 block mb-2">
+                        <i class="fas fa-envelope mr-2"></i>Correo Electrónico
+                    </label>
+                    <input 
+                        type="email" 
+                        id="email-registro"
+                        placeholder="correo@ejemplo.com" 
+                        class="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white py-3 px-4 rounded-lg border border-transparent focus:border-blue-500 focus:outline-none"
+                        required
+                    >
+                </div>
+
+                <div>
+                    <label class="text-gray-600 dark:text-gray-400 block mb-2">
+                        <i class="fas fa-lock mr-2"></i>Contraseña
+                    </label>
+                    <input 
+                        type="password" 
+                        id="password-registro"
+                        placeholder="Crea una contraseña segura" 
+                        class="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white py-3 px-4 rounded-lg border border-transparent focus:border-blue-500 focus:outline-none"
+                        required
+                    >
+                </div>
+
+                <div>
+                    <label class="text-gray-600 dark:text-gray-400 block mb-2">
+                        <i class="fas fa-lock mr-2"></i>Confirmar Contraseña
+                    </label>
+                    <input 
+                        type="password" 
+                        id="confirmar-password-registro"
+                        placeholder="Repite tu contraseña" 
+                        class="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white py-3 px-4 rounded-lg border border-transparent focus:border-blue-500 focus:outline-none"
+                        required
+                    >
+                </div>
+
+                <button 
+                    type="submit" 
+                    class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
+                >
+                    Registrarse
+                </button>
+            </form>
+
+            <div class="text-center mt-4">
+                <span class="text-gray-600 dark:text-gray-400">¿Ya tienes cuenta? </span>
+                <a href="#" id="btn-volver-login" class="text-blue-600 dark:text-blue-400 hover:underline">
+                    Iniciar Sesión
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark Mode Toggle Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggleBtn = document.getElementById('theme-toggle-btn');
+            const themeToggleIcon = document.getElementById('theme-toggle-icon');
+            const htmlElement = document.documentElement;
+
+            function enableDarkMode() {
+                htmlElement.classList.add('dark');
+                themeToggleIcon.classList.replace('fa-moon', 'fa-sun');
+                localStorage.setItem('theme', 'dark');
+            }
+
+            function disableDarkMode() {
+                htmlElement.classList.remove('dark');
+                themeToggleIcon.classList.replace('fa-sun', 'fa-moon');
+                localStorage.setItem('theme', 'light');
+            }
+
+            function toggleTheme() {
+                if (htmlElement.classList.contains('dark')) {
+                    disableDarkMode();
+                } else {
+                    enableDarkMode();
+                }
+            }
+
+            function initTheme() {
+                const savedTheme = localStorage.getItem('theme');
+                const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+                if (savedTheme === 'dark' || (savedTheme === null && prefersDarkMode)) {
+                    enableDarkMode();
+                } else {
+                    disableDarkMode();
+                }
+            }
+
+            themeToggleBtn.addEventListener('click', toggleTheme);
+
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                if (localStorage.getItem('theme') === null) {
+                    if (e.matches) {
+                        enableDarkMode();
+                    } else {
+                        disableDarkMode();
+                    }
+                }
+            });
+
+            // Facial Recognition Logic
+            let video = null;
+            let canvas = null;
+            let canvasOverlay = null;
+
+            async function initFaceRecognition() {
+                await Promise.all([
+                    faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
+                    faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
+                    faceapi.nets.faceRecognitionNet.loadFromUri('/models')
+                ]);
+            }
+
+            function showFacialLogin() {
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('facial-recognition-section').classList.remove('hidden');
+            }
+
+            function hideFacialLogin() {
+                document.getElementById('facial-recognition-section').classList.add('hidden');
+                document.getElementById('login-section').classList.remove('hidden');
+                stopCamera();
+            }
+
+            async function startCamera() {
+                video = document.getElementById('video');
+                canvas = document.getElementById('canvas-overlay');
+                canvasOverlay = canvas.getContext('2d');
+
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+                    video.srcObject = stream;
+                    document.getElementById('video-container').style.display = 'block';
+
+                    video.addEventListener('play', () => {
+                        const displaySize = { width: video.width, height: video.height };
+                        faceapi.matchDimensions(canvas, displaySize);
+
+                        setInterval(async () => {
+                            const detections = await faceapi.detectAllFaces(
+                                video, 
+                                new faceapi.TinyFaceDetectorOptions()
+                            ).withFaceLandmarks();
+
+                            canvasOverlay.clearRect(0, 0, canvas.width, canvas.height);
+                            const resizedDetections = faceapi.resizeResults(detections, { width: video.width, height: video.height });
+                            
+                            if (resizedDetections.length > 0) {
+                                resizedDetections.forEach(detection => {
+                                    const box = detection.detection.box;
+                                    canvasOverlay.strokeStyle = 'green';
+                                    canvasOverlay.lineWidth = 3;
+                                    canvasOverlay.strokeRect(box.x, box.y, box.width, box.height);
+
+                                    setTimeout(() => {
+                                        alert('Reconocimiento facial exitoso');
+                                        stopCamera();
+                                        hideFacialLogin();
+                                    }, 2000);
+                                });
+                            }
+                        }, 100);
+                    });
+                } catch (err) {
+                    console.error("Error accessing camera", err);
+                    alert("No se pudo acceder a la cámara. Verifica los permisos.");
+                }
+            }
+            
+            function stopCamera() {
+                if (video && video.srcObject) {
+                    const tracks = video.srcObject.getTracks();
+                    tracks.forEach(track => track.stop());
+                    video.srcObject = null;
+                    document.getElementById('video-container').style.display = 'none';
+                }
+            }
+
+            document.getElementById('btn-registro').addEventListener('click', () => {
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('registro-section').classList.remove('hidden');
+            });
+
+            document.getElementById('btn-volver-login').addEventListener('click', () => {
+                document.getElementById('registro-section').classList.add('hidden');
+                document.getElementById('login-section').classList.remove('hidden');
+            });
+
+            document.getElementById('btn-facial-login').addEventListener('click', showFacialLogin);
+            document.getElementById('btn-iniciar-facial').addEventListener('click', startCamera);
+            document.getElementById('btn-cancelar-facial').addEventListener('click', hideFacialLogin);
+
+            document.getElementById('registro-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const nombre = document.getElementById('nombre-registro').value;
+                const apellido = document.getElementById('apellido-registro').value;
+                const dpi = document.getElementById('dpi-registro').value;
+                const email = document.getElementById('email-registro').value;
+                const password = document.getElementById('password-registro').value;
+                const confirmarPassword = document.getElementById('confirmar-password-registro').value;
+
+                if (password !== confirmarPassword) {
+                    alert('Las contraseñas no coinciden');
+                    return;
+                }
+
+                if (password.length < 8) {
+                    alert('La contraseña debe tener al menos 8 caracteres');
+                    return;
+                }
+
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    alert('Por favor, ingresa un correo electrónico válido');
+                    return;
+                }
+
+                alert(`Registro exitoso:\nNombre: ${nombre} ${apellido}\nDPI: ${dpi}\nCorreo: ${email}`);
+            });
+
+            initTheme();
+            initFaceRecognition();
+        });
+    </script>
+</body>
+</html>
