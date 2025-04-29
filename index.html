@@ -3,79 +3,250 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión</title>
+    <title>SEGURIDAD GLOBAL S.A - Acceso Seguro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Tailwind Dark Mode Configuration
+        // Tailwind Configuration with enhanced custom colors
         tailwind.config = {
-            darkMode: 'class'
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        navy: '#011640',
+                        darkblue: '#233A59',
+                        blue: '#426A8C',
+                        lightblue: '#7FA7C7',
+                        light: '#F2F2F2',
+                        dark: '#0D0D0D',
+                        darker: '#050505',
+                        accent: '#E2A86B'
+                    }
+                }
+            }
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/face-api.js/dist/face-api.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
-        #video-container {
-            display: none;
-            position: relative;
+        /* Transiciones y animaciones mejoradas */
+        body {
+            transition: background-color 0.5s ease, color 0.5s ease;
         }
-        #canvas-overlay {
+        .fade-in {
+            animation: fadeIn 0.6s ease-in-out;
+        }
+        .slide-in {
+            animation: slideIn 0.6s ease-in-out;
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        .slide-up {
+            animation: slideUp 0.4s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(66, 106, 140, 0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(66, 106, 140, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(66, 106, 140, 0); }
+        }
+        
+        /* Video container styles enhanced */
+        #video-container {
+            position: relative;
+            width: 350px;
+            height: 350px;
+            margin: 0 auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .dark #video-container {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        #video-container:hover {
+            transform: scale(1.01);
+        }
+        
+        #video, #canvas-overlay {
             position: absolute;
             top: 0;
             left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+        }
+        
+        #face-guide {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            border: 2px dashed rgba(242, 242, 242, 0.7);
+            border-radius: 50%;
+            pointer-events: none;
+            transition: border-color 0.3s;
+        }
+        
+        .dark #face-guide {
+            border: 2px dashed rgba(127, 167, 199, 0.7);
+        }
+        
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(13, 13, 13, 0.85);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.5s;
+        }
+        
+        .dark #loading-overlay {
+            background: rgba(5, 5, 5, 0.9);
+        }
+        
+        /* Enhanced input focus effects */
+        input:focus {
+            transform: translateY(-2px);
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(66, 106, 140, 0.15);
+        }
+        
+        /* Enhanced button hover effects */
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(50, 50, 93, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+        
+        /* Better dark mode transitions */
+        .dark input, .dark button {
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+        
+        /* Theme toggle animation */
+        #theme-toggle-btn i {
+            transition: transform 0.5s ease, color 0.3s;
+        }
+        
+        #theme-toggle-btn:hover i {
+            transform: rotate(360deg);
         }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 flex items-center justify-center min-h-screen transition-colors duration-300">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-8 w-full max-w-md relative overflow-hidden">
+<body class="bg-light dark:bg-dark flex items-center justify-center min-h-screen transition-colors duration-500">
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="text-light text-2xl">
+        <div class="text-center slide-in">
+            <i class="fas fa-circle-notch fa-spin mb-6 text-5xl text-blue dark:text-lightblue"></i>
+            <p class="text-light dark:text-light">Cargando modelos de reconocimiento...</p>
+            <p class="text-sm mt-2 text-blue dark:text-lightblue">Por favor espere un momento</p>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-navy rounded-xl shadow-2xl p-8 w-full max-w-md relative overflow-hidden fade-in backdrop-blur-sm border border-transparent dark:border-darkblue">
         <!-- Theme Toggle Button -->
         <button 
             id="theme-toggle-btn"
-            class="absolute top-4 right-4 z-50 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition"
+            class="absolute top-4 right-4 z-50 text-darkblue dark:text-light hover:text-navy dark:hover:text-lightblue transition-colors p-2 rounded-full hover:bg-light dark:hover:bg-darkblue"
+            aria-label="Cambiar tema"
         >
             <i id="theme-toggle-icon" class="fas fa-moon text-2xl"></i>
         </button>
 
-        <!-- Login Section -->
-        <div id="login-section">
-            <div class="text-center mb-8">
-                <i class="fas fa-building text-4xl text-blue-600 mb-2"></i>
-                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">SEGURIDAD GLOBAL S.A</h2>
-                <p class="text-gray-600 dark:text-gray-400 mt-2">Inicia sesión en tu cuenta</p>
+        <!-- Facial Recognition Section (Main Login) -->
+        <div id="facial-recognition-section" class="fade-in">
+            <div class="text-center mb-6 slide-in">
+                <i class="fas fa-building text-4xl text-blue dark:text-lightblue mb-3"></i>
+                <h2 class="text-2xl font-bold text-navy dark:text-light">SEGURIDAD GLOBAL S.A</h2>
+                <p class="text-darkblue dark:text-lightblue mt-2">Acceso por Reconocimiento Facial</p>
+            </div>
+            
+            <div id="video-container" class="mb-6">
+                <video id="video" width="350" height="350" autoplay muted></video>
+                <canvas id="canvas-overlay" width="350" height="350"></canvas>
+                <div id="face-guide" class="pulse"></div>
+            </div>
+            
+            <div id="status-message" class="text-center my-4 text-blue dark:text-lightblue font-medium"></div>
+            
+            <div class="space-y-3">
+                <p class="text-center text-darkblue dark:text-light text-sm mb-4">
+                    Coloca tu rostro dentro del círculo para un acceso seguro y rápido.
+                </p>
+                
+                <button 
+                    id="btn-alternate-login" 
+                    class="w-full bg-darkblue dark:bg-darkblue text-light dark:text-light py-3 rounded-lg hover:bg-blue dark:hover:bg-blue transition-all duration-300 font-semibold"
+                >
+                    <i class="fas fa-keyboard mr-2"></i>Acceso Alternativo
+                </button>
+            </div>
+        </div>
+
+        <!-- Alternative Login Section -->
+        <div id="login-section" class="hidden fade-in">
+            <div class="text-center mb-8 slide-in">
+                <i class="fas fa-building text-4xl text-blue dark:text-lightblue mb-3"></i>
+                <h2 class="text-2xl font-bold text-navy dark:text-light">SEGURIDAD GLOBAL S.A</h2>
+                <p class="text-darkblue dark:text-lightblue mt-2">Método de Acceso Alternativo</p>
             </div>
 
-            <form id="login-form" class="space-y-4">
+            <form id="login-form" class="space-y-4 slide-in">
                 <div>
-                    <label class="text-gray-600 dark:text-gray-400 block mb-2">
+                    <label class="text-darkblue dark:text-light block mb-2">
                         <i class="fas fa-user mr-2"></i>Usuario
                     </label>
                     <input 
                         type="text" 
                         id="username-login"
                         placeholder="Ingresa tu usuario" 
-                        class="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white py-3 px-4 rounded-lg border border-transparent focus:border-blue-500 focus:outline-none"
+                        class="w-full bg-light dark:bg-darkblue text-navy dark:text-light py-3 px-4 rounded-lg border border-transparent focus:border-blue dark:focus:border-lightblue focus:outline-none transition-all duration-300"
                         required
                     >
                 </div>
 
                 <div>
-                    <label class="text-gray-600 dark:text-gray-400 block mb-2">
+                    <label class="text-darkblue dark:text-light block mb-2">
                         <i class="fas fa-lock mr-2"></i>Contraseña
                     </label>
                     <input 
                         type="password" 
                         id="password-login"
                         placeholder="Ingresa tu contraseña" 
-                        class="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white py-3 px-4 rounded-lg border border-transparent focus:border-blue-500 focus:outline-none"
+                        class="w-full bg-light dark:bg-darkblue text-navy dark:text-light py-3 px-4 rounded-lg border border-transparent focus:border-blue dark:focus:border-lightblue focus:outline-none transition-all duration-300"
                         required
                     >
                 </div>
 
                 <div class="flex justify-between items-center">
-                    <label class="flex items-center text-gray-600 dark:text-gray-400">
-                        <input type="checkbox" class="mr-2 dark:bg-gray-700 dark:border-gray-600" />
+                    <label class="flex items-center text-darkblue dark:text-light">
+                        <input type="checkbox" class="mr-2 dark:bg-darkblue dark:border-blue accent-blue" />
                         Recordar usuario
                     </label>
-                    <a href="#" class="text-blue-600 dark:text-blue-400 text-sm hover:underline">
+                    <a href="#" class="text-blue dark:text-lightblue text-sm hover:underline transition-all duration-300">
                         ¿Olvidaste tu contraseña?
                     </a>
                 </div>
@@ -83,7 +254,7 @@
                 <div class="space-y-3">
                     <button 
                         type="submit" 
-                        class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
+                        class="w-full bg-blue dark:bg-blue text-light py-3 rounded-lg hover:bg-darkblue dark:hover:bg-darkblue transition-all duration-300 font-semibold"
                     >
                         Iniciar Sesión
                     </button>
@@ -91,171 +262,94 @@
                     <button 
                         type="button" 
                         id="btn-facial-login"
-                        class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition font-semibold flex items-center justify-center"
+                        class="w-full bg-navy dark:bg-darkblue text-light py-3 rounded-lg hover:bg-darkblue dark:hover:bg-blue transition-all duration-300 font-semibold flex items-center justify-center"
                     >
-                        <i class="fas fa-face-id mr-2"></i>Reconocimiento Facial
+                        <i class="fas fa-camera mr-2"></i>Volver a Reconocimiento Facial
                     </button>
                 </div>
             </form>
-
-            <div class="text-center mt-4">
-                <span class="text-gray-600 dark:text-gray-400">¿No tienes cuenta? </span>
-                <a href="#" id="btn-registro" class="text-blue-600 dark:text-blue-400 hover:underline">
-                    Regístrate aquí
-                </a>
-            </div>
         </div>
 
-        <!-- Facial Recognition Section -->
-        <div id="facial-recognition-section" class="hidden">
-            <div class="text-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Reconocimiento Facial</h2>
-                <p class="text-gray-600 dark:text-gray-400 mt-2">Coloca tu rostro dentro del recuadro</p>
+        <!-- Result Section -->
+        <div id="result-section" class="hidden text-center fade-in">
+            <div class="mb-6 slide-in">
+                <i class="fas fa-check-circle text-5xl text-blue dark:text-lightblue mb-4"></i>
+                <h2 class="text-2xl font-bold text-navy dark:text-light">¡Rostro reconocido!</h2>
+                <p class="text-darkblue dark:text-lightblue mt-2">Acceso autorizado</p>
             </div>
-            
-            <div id="video-container" class="relative mb-4 mx-auto" style="width:350px; height:250px;">
-                <video id="video" width="350" height="250" autoplay muted class="absolute top-0 left-0"></video>
-                <canvas id="canvas-overlay" width="350" height="250" class="absolute top-0 left-0"></canvas>
-                <div id="face-guide" class="absolute top-0 left-0 w-full h-full border-4 border-transparent"></div>
-            </div>
-            
-            <div class="flex space-x-4">
-                <button 
-                    id="btn-iniciar-facial" 
-                    class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition"
-                >
-                    <i class="fas fa-camera mr-2"></i>Tomar Foto
-                </button>
-                <button 
-                    id="btn-cancelar-facial" 
-                    class="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition"
-                >
-                    <i class="fas fa-times mr-2"></i>Cancelar
-                </button>
-            </div>
-        </div>
-
-        <!-- Registro Section -->
-        <div id="registro-section" class="hidden">
-            <div class="text-center mb-8">
-                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">REGISTRO EN SEGURIDAD GLOBAL S.A</h2>
-                <p class="text-gray-600 dark:text-gray-400 mt-2">Crea tu cuenta</p>
-            </div>
-
-            <form id="registro-form" class="space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-gray-600 dark:text-gray-400 block mb-2">
-                            <i class="fas fa-user mr-2"></i>Nombre
-                        </label>
-                        <input 
-                            type="text" 
-                            id="nombre-registro"
-                            placeholder="Tu nombre" 
-                            class="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white py-3 px-4 rounded-lg border border-transparent focus:border-blue-500 focus:outline-none"
-                            required
-                        >
-                    </div>
-                    <div>
-                        <label class="text-gray-600 dark:text-gray-400 block mb-2">
-                            <i class="fas fa-user-friends mr-2"></i>Apellido
-                        </label>
-                        <input 
-                            type="text" 
-                            id="apellido-registro"
-                            placeholder="Tu apellido" 
-                            class="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white py-3 px-4 rounded-lg border border-transparent focus:border-blue-500 focus:outline-none"
-                            required
-                        >
-                    </div>
-                </div>
-
-                <div>
-                    <label class="text-gray-600 dark:text-gray-400 block mb-2">
-                        <i class="fas fa-id-card mr-2"></i>DPI/NIT
-                    </label>
-                    <input 
-                        type="text" 
-                        id="dpi-registro"
-                        placeholder="Número de identificación" 
-                        class="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white py-3 px-4 rounded-lg border border-transparent focus:border-blue-500 focus:outline-none"
-                        required
-                    >
-                </div>
-
-                <div>
-                    <label class="text-gray-600 dark:text-gray-400 block mb-2">
-                        <i class="fas fa-envelope mr-2"></i>Correo Electrónico
-                    </label>
-                    <input 
-                        type="email" 
-                        id="email-registro"
-                        placeholder="correo@ejemplo.com" 
-                        class="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white py-3 px-4 rounded-lg border border-transparent focus:border-blue-500 focus:outline-none"
-                        required
-                    >
-                </div>
-
-                <div>
-                    <label class="text-gray-600 dark:text-gray-400 block mb-2">
-                        <i class="fas fa-lock mr-2"></i>Contraseña
-                    </label>
-                    <input 
-                        type="password" 
-                        id="password-registro"
-                        placeholder="Crea una contraseña segura" 
-                        class="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white py-3 px-4 rounded-lg border border-transparent focus:border-blue-500 focus:outline-none"
-                        required
-                    >
-                </div>
-
-                <div>
-                    <label class="text-gray-600 dark:text-gray-400 block mb-2">
-                        <i class="fas fa-lock mr-2"></i>Confirmar Contraseña
-                    </label>
-                    <input 
-                        type="password" 
-                        id="confirmar-password-registro"
-                        placeholder="Repite tu contraseña" 
-                        class="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white py-3 px-4 rounded-lg border border-transparent focus:border-blue-500 focus:outline-none"
-                        required
-                    >
-                </div>
-
-                <button 
-                    type="submit" 
-                    class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
-                >
-                    Registrarse
-                </button>
-            </form>
-
-            <div class="text-center mt-4">
-                <span class="text-gray-600 dark:text-gray-400">¿Ya tienes cuenta? </span>
-                <a href="#" id="btn-volver-login" class="text-blue-600 dark:text-blue-400 hover:underline">
-                    Iniciar Sesión
-                </a>
-            </div>
+            <div id="image-preview-container" class="mb-6 mx-auto slide-in rounded-lg overflow-hidden shadow-lg" style="width:200px; height:200px;"></div>
+            <div id="result-message" class="mb-4 p-4 rounded-lg bg-light dark:bg-darkblue slide-in"></div>
+            <button 
+                id="btn-volver-inicio" 
+                class="w-full bg-blue dark:bg-blue text-light py-3 rounded-lg hover:bg-darkblue dark:hover:bg-darkblue transition-all duration-300"
+            >
+                <i class="fas fa-home mr-2"></i>Volver al inicio
+            </button>
         </div>
     </div>
 
     <script>
-        // Dark Mode Toggle Logic
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Variables globales
+            let video = null;
+            let canvas = null;
+            let canvasOverlay = null;
+            let faceDetectionInterval = null;
+            let faceDetected = false;
+            let detectionCount = 0;
+            const DETECTION_THRESHOLD = 3; // Número de detecciones consecutivas requeridas
+            
+            // Referencias a secciones
+            const loginSection = document.getElementById('login-section');
+            const facialRecognitionSection = document.getElementById('facial-recognition-section');
+            const resultSection = document.getElementById('result-section');
+            const videoContainer = document.getElementById('video-container');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const statusMessage = document.getElementById('status-message');
+
+            // Configuración mejorada del tema oscuro
             const themeToggleBtn = document.getElementById('theme-toggle-btn');
             const themeToggleIcon = document.getElementById('theme-toggle-icon');
             const htmlElement = document.documentElement;
+            const TRANSITION_DURATION = 500; // milliseconds
 
             function enableDarkMode() {
                 htmlElement.classList.add('dark');
                 themeToggleIcon.classList.replace('fa-moon', 'fa-sun');
                 localStorage.setItem('theme', 'dark');
+                
+                // Añadir transición suave para cambios del tema
+                document.body.style.transition = `background-color ${TRANSITION_DURATION}ms ease, color ${TRANSITION_DURATION}ms ease`;
+                
+                // Aplicar una animación sutil a elementos clave
+                animateThemeChange('dark');
             }
 
             function disableDarkMode() {
                 htmlElement.classList.remove('dark');
                 themeToggleIcon.classList.replace('fa-sun', 'fa-moon');
                 localStorage.setItem('theme', 'light');
+                
+                // Añadir transición suave para cambios del tema
+                document.body.style.transition = `background-color ${TRANSITION_DURATION}ms ease, color ${TRANSITION_DURATION}ms ease`;
+                
+                // Aplicar una animación sutil a elementos clave
+                animateThemeChange('light');
+            }
+
+            function animateThemeChange(theme) {
+                const elements = document.querySelectorAll('button, input, .slide-in, #video-container');
+                elements.forEach(el => {
+                    el.style.transition = `all ${TRANSITION_DURATION}ms ease`;
+                    // Un pequeño efecto de escala para hacer el cambio más visible
+                    el.animate([
+                        { opacity: 0.8, transform: 'scale(0.98)' },
+                        { opacity: 1, transform: 'scale(1)' }
+                    ], {
+                        duration: TRANSITION_DURATION,
+                        easing: 'ease-out'
+                    });
+                });
             }
 
             function toggleTheme() {
@@ -275,12 +369,25 @@
                 } else {
                     disableDarkMode();
                 }
+                
+                // Actualizar estilos específicos para cada tema
+                updateThemeSpecificStyles();
+            }
+            
+            function updateThemeSpecificStyles() {
+                const isDarkMode = htmlElement.classList.contains('dark');
+                const faceGuide = document.getElementById('face-guide');
+                
+                if (faceGuide) {
+                    // Ajustar el color del círculo guía según el tema
+                    faceGuide.style.borderColor = isDarkMode ? 'rgba(127, 167, 199, 0.7)' : 'rgba(242, 242, 242, 0.7)';
+                }
             }
 
-            themeToggleBtn.addEventListener('click', toggleTheme);
-
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-                if (localStorage.getItem('theme') === null) {
+            // Observador de cambios en media queries para detectar cambios de tema del sistema
+            const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            darkModeMediaQuery.addEventListener('change', (e) => {
+                if (!localStorage.getItem('theme')) {
                     if (e.matches) {
                         enableDarkMode();
                     } else {
@@ -289,130 +396,312 @@
                 }
             });
 
-            // Facial Recognition Logic
-            let video = null;
-            let canvas = null;
-            let canvasOverlay = null;
+            themeToggleBtn.addEventListener('click', toggleTheme);
 
+            // Función para cargar modelos de FaceAPI
             async function initFaceRecognition() {
-                await Promise.all([
-                    faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
-                    faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
-                    faceapi.nets.faceRecognitionNet.loadFromUri('/models')
-                ]);
+                try {
+                    console.log("Cargando modelos de reconocimiento facial...");
+                    
+                    // Usar modelos desde CDN
+                    const modelPath = 'https://justadudewhohacks.github.io/face-api.js/models';
+                    
+                    await Promise.all([ 
+                        faceapi.nets.tinyFaceDetector.loadFromUri(modelPath),
+                        faceapi.nets.faceLandmark68Net.loadFromUri(modelPath),
+                        faceapi.nets.faceRecognitionNet.loadFromUri(modelPath)
+                    ]);
+                    
+                    console.log("Modelos cargados correctamente");
+                    
+                    // Añadir una animación de desvanecimiento al ocultar el overlay
+                    loadingOverlay.style.opacity = '1';
+                    loadingOverlay.style.transition = 'opacity 0.5s ease';
+                    loadingOverlay.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        loadingOverlay.style.display = 'none';
+                        startCamera(); // Auto-iniciar la cámara al cargar
+                    }, 500);
+                } catch (error) {
+                    console.error("Error al cargar modelos:", error);
+                    loadingOverlay.style.display = 'none';
+                    showError("Error al cargar los modelos de reconocimiento. Recarga la página para intentarlo de nuevo.");
+                }
             }
 
+            // Funciones para mostrar/ocultar secciones
+            function showSection(section) {
+                const sections = [loginSection, facialRecognitionSection, resultSection];
+                
+                // Ocultar todas las secciones con una animación de desvanecimiento
+                sections.forEach(sec => {
+                    if (!sec.classList.contains('hidden')) {
+                        sec.style.opacity = '1';
+                        sec.style.transition = 'opacity 0.3s ease';
+                        sec.style.opacity = '0';
+                        
+                        setTimeout(() => {
+                            sec.classList.add('hidden');
+                        }, 300);
+                    }
+                });
+                
+                // Mostrar la sección solicitada con una animación de aparición
+                setTimeout(() => {
+                    section.classList.remove('hidden');
+                    section.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        section.style.transition = 'opacity 0.4s ease';
+                        section.style.opacity = '1';
+                    }, 50);
+                }, 300);
+            }
+            
             function showFacialLogin() {
-                document.getElementById('login-section').classList.add('hidden');
-                document.getElementById('facial-recognition-section').classList.remove('hidden');
+                showSection(facialRecognitionSection);
+                startCamera();
             }
 
             function hideFacialLogin() {
-                document.getElementById('facial-recognition-section').classList.add('hidden');
-                document.getElementById('login-section').classList.remove('hidden');
                 stopCamera();
+                showSection(facialRecognitionSection);
+                startCamera();
             }
 
+            function showAlternateLogin() {
+                stopCamera();
+                showSection(loginSection);
+            }
+
+            function showResult(imageData, imageInfo) {
+                showSection(resultSection);
+                
+                // Mostrar vista previa de la imagen capturada
+                const previewContainer = document.getElementById('image-preview-container');
+                previewContainer.innerHTML = `<img src="${imageData}" class="w-full h-full object-cover rounded-lg border-2 border-blue dark:border-lightblue" alt="Captura facial">`;
+                
+                // Mostrar datos de la imagen
+                const resultMessage = document.getElementById('result-message');
+                resultMessage.innerHTML = `
+                    <p class="text-sm text-darkblue dark:text-light">Usuario autenticado correctamente</p>
+                    <p class="text-xs text-blue dark:text-lightblue mt-2">Acceso concedido: ${new Date().toLocaleString()}</p>
+                    <div class="mt-3 pt-2 border-t border-blue/20 dark:border-lightblue/20 text-xs text-left">
+                        <p class="text-darkblue dark:text-light mb-1">Información técnica:</p>
+                        <p class="text-blue dark:text-lightblue">Tamaño: ${imageInfo.size} KB</p>
+                        <p class="text-blue dark:text-lightblue">Formato: ${imageInfo.format}</p>
+                        <p class="text-blue dark:text-lightblue">Tiempo de procesamiento: ${imageInfo.processTime} ms</p>
+                    </div>
+                `;
+            }
+
+            // Control mejorado de la cámara
             async function startCamera() {
                 video = document.getElementById('video');
                 canvas = document.getElementById('canvas-overlay');
                 canvasOverlay = canvas.getContext('2d');
+                faceDetected = false;
+                detectionCount = 0;
+                updateStatus("Preparando cámara...");
 
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            width: 350, 
+                            height: 350,
+                            facingMode: 'user' 
+                        } 
+                    });
+                    
                     video.srcObject = stream;
-                    document.getElementById('video-container').style.display = 'block';
+                    updateStatus("Acerca tu rostro al círculo");
 
                     video.addEventListener('play', () => {
                         const displaySize = { width: video.width, height: video.height };
                         faceapi.matchDimensions(canvas, displaySize);
 
-                        setInterval(async () => {
-                            const detections = await faceapi.detectAllFaces(
-                                video, 
-                                new faceapi.TinyFaceDetectorOptions()
-                            ).withFaceLandmarks();
+                        faceDetectionInterval = setInterval(async () => {
+                            if (faceDetected) return;
 
-                            canvasOverlay.clearRect(0, 0, canvas.width, canvas.height);
-                            const resizedDetections = faceapi.resizeResults(detections, { width: video.width, height: video.height });
-                            
-                            if (resizedDetections.length > 0) {
-                                resizedDetections.forEach(detection => {
-                                    const box = detection.detection.box;
-                                    canvasOverlay.strokeStyle = 'green';
-                                    canvasOverlay.lineWidth = 3;
-                                    canvasOverlay.strokeRect(box.x, box.y, box.width, box.height);
+                            try {
+                                const detections = await faceapi.detectAllFaces(
+                                    video, 
+                                    new faceapi.TinyFaceDetectorOptions()
+                                ).withFaceLandmarks();
 
-                                    setTimeout(() => {
-                                        alert('Reconocimiento facial exitoso');
-                                        stopCamera();
-                                        hideFacialLogin();
-                                    }, 2000);
-                                });
+                                canvasOverlay.clearRect(0, 0, canvas.width, canvas.height);
+                                const resizedDetections = faceapi.resizeResults(detections, displaySize);
+                                
+                                // Adaptación de colores según el tema
+                                const isDarkMode = htmlElement.classList.contains('dark');
+                                const centerBoxColor = isDarkMode ? '#7FA7C7' : '#F2F2F2';
+                                const offCenterBoxColor = isDarkMode ? '#426A8C' : '#426A8C';
+                                
+                                if (resizedDetections.length > 0) {
+                                    const box = resizedDetections[0].detection.box;
+                                    const centerX = box.x + box.width / 2;
+                                    const centerY = box.y + box.height / 2;
+                                    
+                                    // Coordenadas del círculo guía (centro del video)
+                                    const guideCenterX = canvas.width / 2;
+                                    const guideCenterY = canvas.height / 2;
+                                    
+                                    // Verificar si la cara está centrada y tiene tamaño adecuado
+                                    const isCentered = Math.abs(centerX - guideCenterX) < 30 && 
+                                                      Math.abs(centerY - guideCenterY) < 30 &&
+                                                      box.width > 100 && box.width < 200;
+
+                                    if (isCentered) {
+                                        detectionCount++;
+                                        updateStatus(`Rostro detectado (${detectionCount}/${DETECTION_THRESHOLD})`);
+                                        
+                                        // Dibujar cuadro cuando está bien posicionado
+                                        canvasOverlay.strokeStyle = centerBoxColor;
+                                        canvasOverlay.lineWidth = 3;
+                                        canvasOverlay.strokeRect(box.x, box.y, box.width, box.height);
+                                        
+                                        if (detectionCount >= DETECTION_THRESHOLD) {
+                                            faceDetected = true;
+                                            updateStatus("Capturando imagen...");
+                                            setTimeout(() => {
+                                                captureAndProcessFace();
+                                            }, 500);
+                                        }
+                                    } else {
+                                        detectionCount = 0;
+                                        // Dibujar cuadro cuando no está bien posicionado
+                                        canvasOverlay.strokeStyle = offCenterBoxColor;
+                                        canvasOverlay.lineWidth = 2;
+                                        canvasOverlay.strokeRect(box.x, box.y, box.width, box.height);
+                                        updateStatus("Centra tu rostro en el círculo");
+                                    }
+                                } else {
+                                    detectionCount = 0;
+                                    updateStatus("Acerca tu rostro al círculo");
+                                }
+                            } catch (detectionError) {
+                                console.error("Error en detección facial:", detectionError);
+                                updateStatus("Error en detección. Intenta de nuevo.");
                             }
-                        }, 100);
+                        }, 300);
                     });
                 } catch (err) {
-                    console.error("Error accessing camera", err);
-                    alert("No se pudo acceder a la cámara. Verifica los permisos.");
+                    console.error("Error al acceder a la cámara:", err);
+                    showError("No se pudo acceder a la cámara. Verifica los permisos.");
+                    showAlternateLogin();
                 }
             }
             
             function stopCamera() {
+                if (faceDetectionInterval) {
+                    clearInterval(faceDetectionInterval);
+                    faceDetectionInterval = null;
+                }
+                
                 if (video && video.srcObject) {
                     const tracks = video.srcObject.getTracks();
                     tracks.forEach(track => track.stop());
                     video.srcObject = null;
-                    document.getElementById('video-container').style.display = 'none';
                 }
+                
+                faceDetected = false;
+                detectionCount = 0;
             }
 
-            document.getElementById('btn-registro').addEventListener('click', () => {
-                document.getElementById('login-section').classList.add('hidden');
-                document.getElementById('registro-section').classList.remove('hidden');
-            });
-
-            document.getElementById('btn-volver-login').addEventListener('click', () => {
-                document.getElementById('registro-section').classList.add('hidden');
-                document.getElementById('login-section').classList.remove('hidden');
-            });
-
-            document.getElementById('btn-facial-login').addEventListener('click', showFacialLogin);
-            document.getElementById('btn-iniciar-facial').addEventListener('click', startCamera);
-            document.getElementById('btn-cancelar-facial').addEventListener('click', hideFacialLogin);
-
-            document.getElementById('registro-form').addEventListener('submit', (e) => {
-                e.preventDefault();
+            // Capturar y procesar el rostro con conversión mejorada a base64
+            function captureAndProcessFace() {
+                if (!video) return;
                 
-                const nombre = document.getElementById('nombre-registro').value;
-                const apellido = document.getElementById('apellido-registro').value;
-                const dpi = document.getElementById('dpi-registro').value;
-                const email = document.getElementById('email-registro').value;
-                const password = document.getElementById('password-registro').value;
-                const confirmarPassword = document.getElementById('confirmar-password-registro').value;
-
-                if (password !== confirmarPassword) {
-                    alert('Las contraseñas no coinciden');
-                    return;
+                const startTime = performance.now();
+                
+                // Crear canvas temporal para la captura
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = video.videoWidth;
+                tempCanvas.height = video.videoHeight;
+                const tempCtx = tempCanvas.getContext('2d');
+                
+                // Dibujar el frame actual del video
+                tempCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+                
+                // Mejorar la calidad de la imagen (ajustar contraste y brillo)
+                enhanceImage(tempCtx, tempCanvas.width, tempCanvas.height);
+                
+                // Convertir a base64 (formato JPEG con mejor calidad)
+                const imageQuality = 0.9; // 90% de calidad (mayor que el original)
+                const imageData = tempCanvas.toDataURL('image/jpeg', imageQuality);
+                
+                // Cálculo del tamaño aproximado
+                const base64Size = (imageData.length * 0.75); // Convertir de tamaño base64 a bytes reales (aproximado)
+                const imageSizeKB = (base64Size / 1024).toFixed(2);
+                
+                console.log("Imagen capturada (tamaño aproximado):", imageSizeKB + " KB");
+                
+                // Calcular tiempo de procesamiento
+                const endTime = performance.now();
+                const processTime = Math.round(endTime - startTime);
+                
+                // Información sobre la imagen
+                const imageInfo = {
+                    size: imageSizeKB,
+                    format: 'JPEG',
+                    quality: imageQuality * 100 + '%',
+                    processTime: processTime
+                };
+                
+                // Simular procesamiento de reconocimiento
+                stopCamera();
+                updateStatus("Procesando...");
+                
+                // Simular breve retraso de verificación
+                setTimeout(() => {
+                    showResult(imageData, imageInfo);
+                }, 1000);
+            }
+            
+            // Función para mejorar la calidad de la imagen
+            function enhanceImage(ctx, width, height) {
+                // Obtener los datos de la imagen
+                const imageData = ctx.getImageData(0, 0, width, height);
+                const data = imageData.data;
+                
+                // Parámetros de ajuste
+                const contrast = 1.1; // Aumentar contraste ligeramente
+                const brightness = 5; // Aumentar brillo ligeramente
+                
+                // Aplicar ajustes
+                for (let i = 0; i < data.length; i += 4) {
+                    // Ajustar contraste y brillo para cada canal
+                    data[i] = Math.min(255, Math.max(0, (data[i] - 128) * contrast + 128 + brightness));
+                    data[i+1] = Math.min(255, Math.max(0, (data[i+1] - 128) * contrast + 128 + brightness));
+                    data[i+2] = Math.min(255, Math.max(0, (data[i+2] - 128) * contrast + 128 + brightness));
+                    // El canal alpha (data[i+3]) se mantiene igual
                 }
+                
+                // Poner los datos modificados de vueltactx.putImageData(imageData, 0, 0);
+            }
 
-                if (password.length < 8) {
-                    alert('La contraseña debe tener al menos 8 caracteres');
-                    return;
-                }
+function updateStatus(message) {
+    statusMessage.textContent = message;
+}
 
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(email)) {
-                    alert('Por favor, ingresa un correo electrónico válido');
-                    return;
-                }
+function showError(message) {
+    statusMessage.textContent = message;
+    statusMessage.classList.add('text-red-500'); // Añadir clase de error
+}
 
-                alert(`Registro exitoso:\nNombre: ${nombre} ${apellido}\nDPI: ${dpi}\nCorreo: ${email}`);
-            });
+// Eventos de botones
+document.getElementById('btn-alternate-login').addEventListener('click', showAlternateLogin);
+document.getElementById('btn-facial-login').addEventListener('click', showFacialLogin);
+document.getElementById('btn-volver-inicio').addEventListener('click', () => {
+    stopCamera();
+    showSection(facialRecognitionSection);
+});
 
-            initTheme();
-            initFaceRecognition();
-        });
-    </script>
+// Inicialización
+initTheme();
+initFaceRecognition();
+});
+</script>
 </body>
 </html>
